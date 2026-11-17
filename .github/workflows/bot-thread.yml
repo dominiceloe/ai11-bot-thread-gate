@@ -1,0 +1,24 @@
+name: bot-thread
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        required: true
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open a review thread as github-actions[bot]
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ inputs.pr }}
+          REPO: ${{ github.repository }}
+        run: |
+          sha=$(gh api "repos/$REPO/pulls/$PR" --jq .head.sha)
+          gh api "repos/$REPO/pulls/$PR/reviews" \
+            -f commit_id="$sha" -f event=COMMENT -f body="AI review (test)" \
+            -f 'comments[][path]=app.txt' -F 'comments[][line]=2' -f 'comments[][side]=RIGHT' \
+            -f 'comments[][body]=Blocker (test): bot-opened thread'
